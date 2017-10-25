@@ -29,10 +29,11 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
@@ -50,15 +51,25 @@ import com.qualcomm.robotcore.util.Range;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@TeleOp(name="PiTeleOp", group="Iterative Opmode")
-// @Disabled
+@TeleOp(name="Basic: Iterative OpMode", group="Iterative Opmode")
+//@Disabled
 public class Pi_BasicOpMode_Iterative extends OpMode
 {
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
     private DcMotor leftDrive = null;
     private DcMotor rightDrive = null;
+    public DcMotor sideDrive = null;
+    public DcMotor armMotor = null;
+    public Servo claw        = null;
 
+
+
+    public final static double CLAW_HOME = 0.2;
+    double          clawPosition    = CLAW_HOME;                  // Servo safe position
+    public final static double CLAW_MIN_RANGE  = 0.20;
+    public final static double CLAW_MAX_RANGE  = 0.7;
+    final double    CLAW_SPEED      = 0.01 ;                            // sets rate to move servo
     /*
      * Code to run ONCE when the driver hits INIT
      */
@@ -69,16 +80,21 @@ public class Pi_BasicOpMode_Iterative extends OpMode
         // Initialize the hardware variables. Note that the strings used here as parameters
         // to 'get' must correspond to the names assigned during the robot configuration
         // step (using the FTC Robot Controller app on the phone).
-        leftDrive  = hardwareMap.get(DcMotor.class, "left_drive");
-        rightDrive = hardwareMap.get(DcMotor.class, "right_drive");
-
+        leftDrive = hardwareMap.get(DcMotor.class, "leftDrive");
+        rightDrive = hardwareMap.get(DcMotor.class, "rightDrive");
+        sideDrive = hardwareMap.get(DcMotor.class, "sideDrive");
+        armMotor = hardwareMap.get(DcMotor.class, "armMotor");
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
         leftDrive.setDirection(DcMotor.Direction.FORWARD);
         rightDrive.setDirection(DcMotor.Direction.REVERSE);
-
+        sideDrive.setDirection(DcMotor.Direction.REVERSE);
+        armMotor.setDirection(DcMotor.Direction.FORWARD);
         // Tell the driver that initialization is complete.
-        telemetry.addData("Status", "Initialized");
+        telemetry.addData("Status", "Motors Initialized");
+
+        claw = hardwareMap.get(Servo.class, "claw");
+        claw.setPosition(CLAW_HOME);
     }
 
     /*
@@ -86,8 +102,6 @@ public class Pi_BasicOpMode_Iterative extends OpMode
      */
     @Override
     public void init_loop() {
-        leftDrive.setPower(0);
-        rightDrive.setPower(0);
     }
 
     /*
@@ -121,16 +135,54 @@ public class Pi_BasicOpMode_Iterative extends OpMode
         // - This requires no math, but it is hard to drive forward slowly and keep straight.
         // leftPower  = -gamepad1.left_stick_y ;
         // rightPower = -gamepad1.right_stick_y ;
+        if (gamepad1.left_bumper) {
+            sideDrive.setPower(-1.0);
+        }
+        else if (gamepad1.right_bumper) {
+            sideDrive.setPower(1.0);
+        }
+        else {
+            sideDrive.setPower(0);
+        }
 
+       // int position = sideDrive.getCurrentPosition();
+        // telemetry.addData("Side Encoder Position", position);
+        if (gamepad1.dpad_up) {
+            armMotor.setPower(1.0);
+        }
+        else if (gamepad1.dpad_down) {
+            armMotor.setPower(-1.0);
+        }
+        else {
+            armMotor.setPower(0);
+        }
         // Send calculated power to wheels
         leftDrive.setPower(leftPower);
         rightDrive.setPower(rightPower);
-
         // Show the elapsed game time and wheel power.
         telemetry.addData("Status", "Run Time: " + runtime.toString());
         telemetry.addData("Motors", "left (%.2f), right (%.2f)", leftPower, rightPower);
-    }
 
+
+        moveClaw();
+    }
+    public void moveClaw() {
+        if (gamepad1.x)
+            clawPosition += CLAW_SPEED;
+        else if (gamepad1.b)
+            clawPosition -= CLAW_SPEED;
+
+        // Move both servos to new position.
+        clawPosition = Range.clip(clawPosition, CLAW_MIN_RANGE, CLAW_MAX_RANGE);
+        claw.setPosition(clawPosition);
+
+        // Send telemetry message to signify robot running;
+
+        telemetry.addData("claw",  "%.2f", clawPosition);
+        telemetry.update();
+
+
+    }
     /*
      * Code to run ONCE after the driver hits STOP
      */
