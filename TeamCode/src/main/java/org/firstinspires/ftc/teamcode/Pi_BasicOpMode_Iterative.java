@@ -84,6 +84,7 @@ public class Pi_BasicOpMode_Iterative extends OpMode
         rightDrive = hardwareMap.get(DcMotor.class, "rightDrive");
         sideDrive = hardwareMap.get(DcMotor.class, "sideDrive");
         armMotor = hardwareMap.get(DcMotor.class, "armMotor");
+        claw = hardwareMap.get(Servo.class, "claw");
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
         leftDrive.setDirection(DcMotor.Direction.FORWARD);
@@ -93,7 +94,6 @@ public class Pi_BasicOpMode_Iterative extends OpMode
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Motors Initialized");
 
-        claw = hardwareMap.get(Servo.class, "claw");
         claw.setPosition(CLAW_HOME);
     }
 
@@ -147,10 +147,10 @@ public class Pi_BasicOpMode_Iterative extends OpMode
 
        // int position = sideDrive.getCurrentPosition();
         // telemetry.addData("Side Encoder Position", position);
-        if (gamepad1.dpad_up) {
+        if (gamepad1.dpad_down) {
             armMotor.setPower(1.0);
         }
-        else if (gamepad1.dpad_down) {
+        else if (gamepad1.dpad_up) {
             armMotor.setPower(-1.0);
         }
         else {
