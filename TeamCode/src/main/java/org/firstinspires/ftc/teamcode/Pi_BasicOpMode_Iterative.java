@@ -43,33 +43,39 @@ import com.qualcomm.robotcore.util.Range;
  * The names of OpModes appear on the menu of the FTC Driver Station.
  * When an selection is made from the menu, the corresponding OpMode
  * class is instantiated on the Robot Controller and executed.
- *
+ * <p>
  * This particular OpMode just executes a basic Tank Drive Teleop for a two wheeled robot
  * It includes all the skeletal structure that all iterative OpModes contain.
- *
+ * <p>
  * Use Android Studios to Copy this Class, and Paste it into your team's code folder with a new name.
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Basic: Iterative OpMode", group="Iterative Opmode")
+@TeleOp(name = "Basic: Iterative OpMode", group = "Iterative Opmode")
 //@Disabled
-public class Pi_BasicOpMode_Iterative extends OpMode
-{
+public class Pi_BasicOpMode_Iterative extends OpMode {
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
     private DcMotor leftDrive = null;
     private DcMotor rightDrive = null;
     public DcMotor sideDrive = null;
     public DcMotor armMotor = null;
-    public Servo claw        = null;
+    public Servo claw = null;
+    public Servo gemKnocker = null;
 
 
+    public final static double CLAW_HOME = 0.65;
+    double clawPosition = CLAW_HOME;                  // Servo safe position
+    public final static double CLAW_MIN_RANGE = 0.20;
+    public final static double CLAW_MAX_RANGE = 0.7;
+    final double CLAW_SPEED = 0.01;                            // sets rate to move servo
 
-    public final static double CLAW_HOME = 0.2;
-    double          clawPosition    = CLAW_HOME;                  // Servo safe position
-    public final static double CLAW_MIN_RANGE  = 0.20;
-    public final static double CLAW_MAX_RANGE  = 0.7;
-    final double    CLAW_SPEED      = 0.01 ;                            // sets rate to move servo
+    /* public final static double GEM_HOME = 0.65;
+     double gemKnockerPosition = GEM_HOME;
+     public final static double GEM_MIN_RANGE = 0.2;
+     public final static double GEM_MAX_RANGE = 0.8;
+     final double   GEM_SPEED    = 0.01;
+     */
     /*
      * Code to run ONCE when the driver hits INIT
      */
@@ -90,11 +96,13 @@ public class Pi_BasicOpMode_Iterative extends OpMode
         leftDrive.setDirection(DcMotor.Direction.FORWARD);
         rightDrive.setDirection(DcMotor.Direction.REVERSE);
         sideDrive.setDirection(DcMotor.Direction.REVERSE);
+        sideDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         armMotor.setDirection(DcMotor.Direction.FORWARD);
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Motors Initialized");
 
         claw.setPosition(CLAW_HOME);
+        // gemKnocker.setPosition(GEM_HOME);
     }
 
     /*
@@ -126,36 +134,35 @@ public class Pi_BasicOpMode_Iterative extends OpMode
 
         // POV Mode uses left stick to go forward, and right stick to turn.
         // - This uses basic math to combine motions and is easier to drive straight.
-        double drive = -gamepad1.left_stick_y;
-        double turn  =  gamepad1.right_stick_x;
-        leftPower    = Range.clip(drive + turn, -1.0, 1.0) ;
-        rightPower   = Range.clip(drive - turn, -1.0, 1.0) ;
+        //double drive = -gamepad1.left_stick_y;
+        //double turn  =  gamepad1.right_stick_x;
+        //leftPower    = Range.clip(drive + turn, -1.0, 1.0) ;
+        //rightPower   = Range.clip(drive - turn, -1.0, 1.0) ;
 
         // Tank Mode uses one stick to control each wheel.
         // - This requires no math, but it is hard to drive forward slowly and keep straight.
-        // leftPower  = -gamepad1.left_stick_y ;
-        // rightPower = -gamepad1.right_stick_y ;
+        leftPower = -gamepad1.left_stick_y;
+        rightPower = -gamepad1.right_stick_y;
+
+
         if (gamepad1.left_bumper) {
             sideDrive.setPower(-1.0);
-        }
-        else if (gamepad1.right_bumper) {
+        } else if (gamepad1.right_bumper) {
             sideDrive.setPower(1.0);
-        }
-        else {
+        } else {
             sideDrive.setPower(0);
         }
 
-       // int position = sideDrive.getCurrentPosition();
+        // int position = sideDrive.getCurrentPosition();
         // telemetry.addData("Side Encoder Position", position);
         if (gamepad1.dpad_down) {
             armMotor.setPower(1.0);
-        }
-        else if (gamepad1.dpad_up) {
+        } else if (gamepad1.dpad_up) {
             armMotor.setPower(-1.0);
-        }
-        else {
+        } else {
             armMotor.setPower(0);
         }
+
         // Send calculated power to wheels
         leftDrive.setPower(leftPower);
         rightDrive.setPower(rightPower);
@@ -165,7 +172,9 @@ public class Pi_BasicOpMode_Iterative extends OpMode
 
 
         moveClaw();
+        // moveGem();
     }
+
     public void moveClaw() {
         if (gamepad1.x)
             clawPosition += CLAW_SPEED;
@@ -178,11 +187,26 @@ public class Pi_BasicOpMode_Iterative extends OpMode
 
         // Send telemetry message to signify robot running;
 
-        telemetry.addData("claw",  "%.2f", clawPosition);
+        telemetry.addData("claw", "%.2f", clawPosition);
         telemetry.update();
 
 
     }
+
+    /*   public void moveGem() {
+           if (gamepad1.y)
+               gemKnockerPosition += GEM_SPEED;
+           else if (gamepad1.a)
+               gemKnockerPosition -= GEM_SPEED;
+
+
+           gemKnockerPosition = Range.clip(gemKnockerPosition, GEM_MIN_RANGE, GEM_MAX_RANGE);
+           gemKnocker.setPosition(gemKnockerPosition);
+
+           telemetry.addData("gemKnocker", "%.2f", gemKnockerPosition);
+           telemetry.update();
+       }
+       */
     /*
      * Code to run ONCE after the driver hits STOP
      */
