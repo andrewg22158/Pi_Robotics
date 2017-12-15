@@ -61,7 +61,7 @@ public class Pi_BasicOpMode_Iterative extends OpMode {
     public DcMotor sideDrive = null;
     public DcMotor armMotor = null;
     public Servo claw = null;
-    public Servo gemKnocker = null;
+   // public Servo gemKnocker = null;
 
 
     public final static double CLAW_HOME = 0.65;
@@ -96,7 +96,7 @@ public class Pi_BasicOpMode_Iterative extends OpMode {
         leftDrive.setDirection(DcMotor.Direction.FORWARD);
         rightDrive.setDirection(DcMotor.Direction.REVERSE);
         sideDrive.setDirection(DcMotor.Direction.REVERSE);
-        sideDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        armMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         armMotor.setDirection(DcMotor.Direction.FORWARD);
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Motors Initialized");
@@ -134,15 +134,15 @@ public class Pi_BasicOpMode_Iterative extends OpMode {
 
         // POV Mode uses left stick to go forward, and right stick to turn.
         // - This uses basic math to combine motions and is easier to drive straight.
-        //double drive = -gamepad1.left_stick_y;
-        //double turn  =  gamepad1.right_stick_x;
-        //leftPower    = Range.clip(drive + turn, -1.0, 1.0) ;
-        //rightPower   = Range.clip(drive - turn, -1.0, 1.0) ;
+        double drive = -gamepad1.left_stick_y;
+        double turn  =  gamepad1.right_stick_x;
+        leftPower    = Range.clip(drive + turn, -1.0, 1.0) ;
+        rightPower   = Range.clip(drive - turn, -1.0, 1.0) ;
 
         // Tank Mode uses one stick to control each wheel.
         // - This requires no math, but it is hard to drive forward slowly and keep straight.
-        leftPower = -gamepad1.left_stick_y;
-        rightPower = -gamepad1.right_stick_y;
+        //leftPower = -gamepad1.left_stick_y;
+        //rightPower = -gamepad1.right_stick_y;
 
 
         if (gamepad1.left_bumper) {
@@ -155,9 +155,9 @@ public class Pi_BasicOpMode_Iterative extends OpMode {
 
         // int position = sideDrive.getCurrentPosition();
         // telemetry.addData("Side Encoder Position", position);
-        if (gamepad1.dpad_down) {
+        if (gamepad2.dpad_down) {
             armMotor.setPower(1.0);
-        } else if (gamepad1.dpad_up) {
+        } else if (gamepad2.dpad_up) {
             armMotor.setPower(-1.0);
         } else {
             armMotor.setPower(0);
@@ -176,9 +176,9 @@ public class Pi_BasicOpMode_Iterative extends OpMode {
     }
 
     public void moveClaw() {
-        if (gamepad1.x)
+        if (gamepad2.x)
             clawPosition += CLAW_SPEED;
-        else if (gamepad1.b)
+        else if (gamepad2.b)
             clawPosition -= CLAW_SPEED;
 
         // Move both servos to new position.

@@ -34,6 +34,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
@@ -60,6 +61,15 @@ public class Pi_BasicOpMode_Linear_Autonomous extends LinearOpMode {
     private DcMotor leftDrive = null;
     private DcMotor rightDrive = null;
     private DcMotor sideDrive = null;
+    private DcMotor armMotor = null;
+    public Servo claw = null;
+    public final static double CLAW_HOME = 0.2;
+    //public Servo jewel = null;
+    //public final static double JEWEL_HOME = 0.1;
+    double clawPosition = CLAW_HOME;                  // Servo safe position
+    //public final static double CLAW_MIN_RANGE = 0.20;
+    //public final static double CLAW_MAX_RANGE = 0.7;
+    final double CLAW_SPEED = 0.01;
 
     @Override
     public void runOpMode() {
@@ -72,7 +82,11 @@ public class Pi_BasicOpMode_Linear_Autonomous extends LinearOpMode {
         leftDrive  = hardwareMap.get(DcMotor.class, "leftDrive");
         rightDrive = hardwareMap.get(DcMotor.class, "rightDrive");
         sideDrive = hardwareMap.get(DcMotor.class, "sideDrive");
-
+        armMotor = hardwareMap.get(DcMotor.class, "armMotor");
+        claw = hardwareMap.get(Servo.class, "claw");
+      //  jewel = hardwareMap.get(Servo.class, "jewel");
+        claw.setPosition(CLAW_HOME);
+        //jewel.setPosition(JEWEL_HOME);
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
         //leftDrive.setDirection(DcMotor.Direction.FORWARD);
@@ -80,22 +94,37 @@ public class Pi_BasicOpMode_Linear_Autonomous extends LinearOpMode {
 
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
-        leftDrive.setPower(.5);
-        rightDrive.setPower(-.5);
+        armMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        claw.setPosition(CLAW_HOME);
+        //jewel.setPosition(JEWEL_HOME);
+        leftDrive.setPower(0);
+        rightDrive.setPower(0);
+        armMotor.setPower(.25);
 
         runtime.reset();
 
         while (runtime.time()< 1.0) {}
-        leftDrive.setPower(0);
-        rightDrive.setPower(0);
-        sideDrive.setPower(1);
+        leftDrive.setPower(1);
+        rightDrive.setPower(-1);
+        //sideDrive.setPower();
+        armMotor.setPower(0);
 
         runtime.reset();
 
-        while (runtime.time()< 1.3) {}
+        while (runtime.time()< 2.5) {}
+        leftDrive.setPower(0);
+        rightDrive.setPower(0);
+       // sideDrive.setPower(0);
+        armMotor.setPower(.25);
+        claw.setPosition(CLAW_HOME + .4);
 
-        sideDrive.setPower(0);
+        runtime.reset();
 
+        while (runtime.time()< 2.75)
+        armMotor.setPower(0);
+
+
+        runtime.reset();
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
 
